@@ -46,12 +46,10 @@ exports.plotPoints = function (points) {
         _annotationParams.longitude = points[i].longitude;
         _annotationParams.myid = 'annotation' + i;
         _annotationParams.subtitle = '';
-        _annotationParams.rightButton = Titanium.UI.iPhone.SystemButtonStyle.BORDERED;
         
         _annotation = Titanium.Map.createAnnotation(_annotationParams);
         mapView.addAnnotation(_annotation);
     }
-    
     // Center the map around the active points
     mapView.setLocation(mapProxy.retrieveMapCenter());
     if (activityIndicator) activityIndicator.view.hide();
@@ -90,6 +88,7 @@ exports.searchBlur = function (e) {
 exports.openCategoryBrowsingView = function (categories) {
     _hideAllViews();
     
+    if (categories.length === 1) return exports.openCategoryLocationsListView(require('/js/models/MapProxy').retrieveLocationsByCategory(categories[0].name));
     // If there isn't a categoryNavBar yet, go ahead and create one.
     if (!categoryNavBar) _createAndAddCategoryNav();
     
@@ -159,7 +158,8 @@ exports.openCategoryLocationsListView = function (viewModel) {
     categoryLocationsListView.show();
     if (!categoryNavBar) _createAndAddCategoryNav();
     categoryNavBar.view.show();
-    categoryNavBar.leftButton.show();
+    
+    categoryNavBar.leftButton[require('/js/models/MapProxy').retrieveTotalCategories() > 1 ? 'show' : 'hide']();
     categoryNavBar.titleLabel.text = viewModel.categoryName;
     categoryNavBar.rightButton.title = localDictionary.map;
     categoryNavBar.rightButton.show();
@@ -292,7 +292,7 @@ var _createMainView = function() {
     bottomNavView = Ti.UI.createView(styles.mapNavView);
     view.add(bottomNavView);
     if (deviceProxy.isIOS()) {
-        bottomNavButtons = Titanium.UI.createTabbedBar(styles.mapButtonBar);
+        bottomNavButtons = Ti.UI.iOS.createTabbedBar(styles.mapButtonBar);
         bottomNavButtons.labels = exports.navButtonValues;
         bottomNavButtons.width = 225;
         bottomNavButtons.index = 0;        
