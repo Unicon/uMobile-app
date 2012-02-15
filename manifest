@@ -2,7 +2,7 @@
 #publisher:athena
 #url:http://www.jasig.org/uportal
 #image:launcherIcon.png
-#appid:org.jasig.portal.mobile.app
+#appid:net.unicon.showcase.mobile.app
 #desc:No description provided
 #type:ipad
 #guid:7ec91aa8-a9a7-4cc6-95a8-9e078be9fdfc

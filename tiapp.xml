@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ti:app xmlns:ti="http://ti.appcelerator.org">
-    <property name="ti.android.runtime">v8</property>
-    <sdk-version>1.8.0.1-1_8_X</sdk-version>
+    <sdk-version>1.8.0.1-jasig</sdk-version>
     <deployment-targets>
         <target device="mobileweb">false</target>
         <target device="iphone">true</target>
@@ -9,11 +8,11 @@
         <target device="android">true</target>
         <target device="blackberry">false</target>
     </deployment-targets>
-    <id>org.jasig.portal.mobile.app</id>
-    <name>uMobile</name>
+    <id>net.unicon.showcase.mobile.app</id>
+    <name>Unicon</name>
     <version>1.0</version>
     <publisher>athena</publisher>
-    <url>http://www.jasig.org/uportal</url>
+    <url>http://www.unicon.net</url>
     <description>No description provided</description>
     <copyright>2011 by athena</copyright>
     <icon>launcherIcon.png</icon>
