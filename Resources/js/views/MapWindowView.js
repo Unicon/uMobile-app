@@ -19,20 +19,25 @@
 
 var view, mapProxy, activityIndicator, mapView, searchBar, titleBar, bottomNavView, bottomNavButtons, zoomButtonBar, categoryBrowsingView, categoryNavBar, categoryLocationsListView, favoritesBar,
 _ = require('/js/libs/underscore-min'),
-app = require('/js/Facade'),
+app = require('/js/Constants'),
 styles = require('/js/style'),
 localDictionary = require('/js/localization').retrieveLocale(Ti.App.Properties.getString('locale')),
 deviceProxy = require('/js/models/DeviceProxy'),
 config = require('/js/config');
 
 // Public methods
-exports.createView = function (dataProxy) {
-    mapProxy = dataProxy;
+exports.open = function () {
+    mapProxy = require('/js/models/MapProxy');
     view = Ti.UI.createView();
     _createMainView();
     exports.resetMapLocation();
     
     return view;
+};
+exports.close = function () {
+    categoryNavBar = null;
+    categoryBrowsingView = null;
+    categoryLocationsListView = null;
 };
 
 exports.plotPoints = function (points) {
@@ -64,16 +69,14 @@ exports.showActivityIndicator = function () {
 };
 
 exports.saveActivityIndicatorMessage = function (message) {
-    if (activityIndicator) activityIndicator.saveLoadingMessage(message);
+    if (activityIndicator) activityIndicator.setLoadingMessage(message);
 };
 
 exports.rotate = function (orientation) {
     styles = styles.updateStyles();
     if (mapView) mapView.height = styles.mapView.height;
     if (bottomNavView) bottomNavView.top = styles.mapNavView.top;
-    if (titleBar) titleBar.rotate(orientation);
-    if (searchBar) searchBar.rotate(orientation);
-    if (categoryNavBar) categoryNavBar.rotate(orientation);
+
     if (categoryBrowsingView) categoryBrowsingView.height = styles.mapTableView.height;
 };
 
@@ -99,48 +102,50 @@ exports.openCategoryBrowsingView = function (categories) {
     categoryNavBar.rightButton.visible = false;
     
     if (categoryBrowsingView) return categoryBrowsingView.show();
-
-    // Create the view to hold tableviews listing categories and locations.
-    categoryBrowsingView = Ti.UI.createTableView({
-        data: (function(c) {
-            var _data = [], _labelStyle = _.clone(styles.mapCategoryCount), _rowStyle = _.clone(styles.mapCategoryRow), _categoryName;
+    
+    var _categoryBrowsingData = (function(c) {
+        var _data = [], _labelStyle = _.clone(styles.mapCategoryCount), _rowStyle = _.clone(styles.mapCategoryRow), _categoryName;
+        
+        // Iterate through array of categories and create table view rows for user to select.
+        for (var i=0, iLength = c.length; i<iLength; i++) {
+            // Create a row with the category name
+            _categoryName = c[i]['name'];
+            _rowStyle.title = _categoryName;
+            _data.push(Titanium.UI.createTableViewRow(_rowStyle));
             
-            // Iterate through array of categories and create table view rows for user to select.
-            for (var i=0, iLength = c.length; i<iLength; i++) {
-                // Create a row with the category name
-                _categoryName = c[i]['name'];
-                _rowStyle.title = _categoryName;
-                _data.push(Titanium.UI.createTableViewRow(_rowStyle));
-                
-                // Add a count to the row with number of children for category.
-                _labelStyle.text = c[i]['numChildren'];
-                _data[i].add(Ti.UI.createLabel(_labelStyle));
-                
-                if (deviceProxy.isAndroid()) {
-                    // This was causing double titles to be displayed in iOS. If it looks bad in Android, remove it altogether.
-                    // See UMOBILE-224 for backstory.
-                    // Add the label for the row
-                    var _categoryLabel = Ti.UI.createLabel({
-                        text: _categoryName,
-                        left: '10dp',
-                        color: "#000"
-                    });
-                    _data[i].add(_categoryLabel);
-                }
-                
-                // Add a listener to the row to let the controller 
-                // know the user wants to explore the category
-
-                function setClickEvent (sourceObject, categoryTitle) {
-                    sourceObject.addEventListener('click', function (e) {
-                        Ti.App.fireEvent("MapViewCategoryRowClick", { category : categoryTitle });
-                    });
-                }
-                setClickEvent(_data[i], _categoryName);
+            // Add a count to the row with number of children for category.
+            _labelStyle.text = c[i]['numChildren'];
+            _data[i].add(Ti.UI.createLabel(_labelStyle));
+            
+            if (deviceProxy.isAndroid()) {
+                // This was causing double titles to be displayed in iOS. If it looks bad in Android, remove it altogether.
+                // See UMOBILE-224 for backstory.
+                // Add the label for the row
+                var _categoryLabel = Ti.UI.createLabel({
+                    text: _categoryName,
+                    left: '10dp',
+                    color: "#000"
+                });
+                _data[i].add(_categoryLabel);
             }
             
-            return _data;
-        })(categories),
+            // Add a listener to the row to let the controller 
+            // know the user wants to explore the category
+
+            function setClickEvent (sourceObject, categoryTitle) {
+                sourceObject.addEventListener('click', function (e) {
+                    Ti.App.fireEvent("MapViewCategoryRowClick", { category : categoryTitle });
+                });
+            }
+            setClickEvent(_data[i], _categoryName);
+        }
+        
+        return _data;
+    })(categories);
+    
+    // Create the view to hold tableviews listing categories and locations.
+    categoryBrowsingView = Ti.UI.createTableView({
+        data: _categoryBrowsingData,
         height: styles.mapTableView.height,
         top: styles.mapTableView.top
     });
@@ -153,6 +158,9 @@ exports.openCategoryLocationsListView = function (viewModel) {
     if (!categoryLocationsListView) {
         categoryLocationsListView = Ti.UI.createTableView(styles.mapTableView);
         view.add(categoryLocationsListView);
+        categoryLocationsListView.addEventListener('click', function (e) {
+            Ti.App.fireEvent(exports.events['CATEGORY_LIST_ITEM_CLICK'], {title:e.rowData.title});
+        });
     }
     
     categoryLocationsListView.show();
@@ -165,10 +173,6 @@ exports.openCategoryLocationsListView = function (viewModel) {
     categoryNavBar.rightButton.show();
     
     categoryLocationsListView.setData(viewModel.locations);
-    
-    categoryLocationsListView.addEventListener('click', function (e) {
-        Ti.App.fireEvent(exports.events['CATEGORY_LIST_ITEM_CLICK'], {title:e.rowData.title});
-    });
 };
 
 exports.openCategoryLocationsMapView = function (viewModel) {

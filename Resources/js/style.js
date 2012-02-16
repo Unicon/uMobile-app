@@ -61,7 +61,8 @@ exports.updateStyles = function () {
     };
     exports.portletView= {
         top: defaults.TITLEBAR_HEIGHT + 'dp',
-        height: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT + 'dp'
+        height: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT - defaults.STATUSBAR_HEIGHT + 'dp',
+        heightWithSecondary: deviceProxy.retrieveHeight(true) - (defaults.TITLEBAR_HEIGHT * 2) - defaults.STATUSBAR_HEIGHT + 'dp'
     };
     exports.portletWindow= {
         // url: 'js/views/WindowContext.js',
@@ -148,10 +149,10 @@ exports.updateStyles = function () {
         barColor: defaults.SECONDARY_BAR_BACKGROUND_COLOR,
         backgroundGradient: defaults.SECONDARY_BAR_BACKGROUND_GRADIENT,
         showCancel: OS === 'android' ? false : true,
-        width: deviceProxy.retrieveWidth(true) + 'dp'
+        width: '100%'
     };
     exports.searchBarInput= {
-        width: deviceProxy.retrieveWidth(true) - 5 - 5 + 'dp',
+        width: '96%',
         height: defaults.SEARCHBAR_HEIGHT - 7 + 'dp',
         top: '5dp',
         borderStyle:Titanium.UI.INPUT_BORDERSTYLE_NONE,
@@ -163,7 +164,7 @@ exports.updateStyles = function () {
     	left: 0,
     	height: defaults.TITLEBAR_HEIGHT,
         backgroundGradient: defaults.PRIMARY_BAR_BACKGROUND_GRADIENT,
-    	width: OS === 'android' ? 'auto' : Titanium.Platform.displayCaps.platformWidth,
+        width: '100%',
     	zIndex: 1
     };
     //Titanium.UI.Button implemented in the GenericTitleBar
@@ -231,7 +232,8 @@ exports.updateStyles = function () {
         borderRadius: 5,
         backgroundColor: 'transparent',
         backgroundColorPressed: "#999",
-        left: deviceProxy.retrieveWidth(true) - 40 - 5 + 'dp'
+        // left: deviceProxy.retrieveWidth(true) - 40 - 5 + 'dp'
+        right: '5dp'
     };
     exports.titleBarSettingsButton= {
         height: '18dp',
@@ -245,13 +247,12 @@ exports.updateStyles = function () {
     	getHeight: defaults.TITLEBAR_HEIGHT,
     	backgroundColor: defaults.SECONDARY_BAR_BACKGROUND_COLOR,
     	backgroundGradient: defaults.SECONDARY_BAR_BACKGROUND_GRADIENT,
-    	width: OS === 'android' ? 'auto' : Titanium.Platform.displayCaps.platformWidth
+    	width: '100%'
     };
 
     // Styles for new prototype in v1.1, views/SecondaryNav.js
     exports.secondaryNavLabel= {
         width: deviceProxy.retrieveWidth(true) - 70 * 2 - 10 * 4 + 'dp',
-        left: 70 + 10 * 2 + 'dp',
         height: defaults.TITLEBAR_HEIGHT + 'dp',
         color: defaults.SECONDARY_BAR_COLOR,
         textAlign: "center",
@@ -266,7 +267,6 @@ exports.updateStyles = function () {
 
     exports.secondaryNavButton= {
         style: OS === 'iphone' ? Titanium.UI.iPhone.SystemButtonStyle.PLAIN : 0,
-        left: '10dp',
         plainLeft: 10,
         width: '50dp',
         plainWidth: 50,
@@ -312,6 +312,50 @@ exports.updateStyles = function () {
         contentHeight:'auto',
         zIndex: 1
     };
+    exports.portalFolderView = {
+        top: 0,
+        backgroundColor: '#fff',
+        height: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT - defaults.STATUSBAR_HEIGHT + 'dp',
+        heightWithNote: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT - defaults.STATUSBAR_HEIGHT - 40 +'dp',
+        layout: 'vertical',
+        contentHeight: 'auto'
+    };
+    exports.portalFolderHeader = {
+        height: '40dp',
+        width: '100%',
+        backgroundGradient: defaults.SECONDARY_BAR_BACKGROUND_GRADIENT
+    };
+    exports.portalFolderLabel = {
+        left: '10dp',
+        color: '#ffffff',
+        textAlign: 'left',
+        touchEnabled: false,
+        font: {
+            fontWeight: 'bold',
+            fontSize: '14'
+        }
+    };
+    exports.portletRowIcon = {
+        left: '10dp',
+        width: OS === 'ipad' ? 72 : '57dp',
+        height: OS === 'ipad' ? 72 : '57dp'
+    };
+    exports.portletRow = {
+        width: '100%',
+        height: OS === 'ipad' ? 82 : '67dp',
+        backgroundColor: '#eee',
+        backgroundGradient: {
+            type: 'linear',
+            colors: ['#fff', '#eee']
+        }
+    };
+    exports.portletRowLabel = {
+        left: OS === 'ipad' ? 92 : '77dp',
+        color: '#333',
+        textAlign: 'left',
+        touchEnabled: false
+    };
+    
     exports.homeGuestNote = {
         height: '40dp',
         rawHeight: 40,
@@ -385,13 +429,13 @@ exports.updateStyles = function () {
         visible: false,
         top: defaults.TITLEBAR_HEIGHT + 'dp',
         height: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT + 'dp',
-        width: deviceProxy.retrieveWidth(true),
+        width: '100%',
         modal: true
     };
 
     exports.directoryDetailAttributeTable= {
         top: defaults.TITLEBAR_HEIGHT + 'dp',
-        width: deviceProxy.retrieveWidth(true) + 'dp'
+        width: '100%'
     };
     exports.directoryDetailRow= {
         backgroundColor: "#fff",
@@ -519,14 +563,14 @@ exports.updateStyles = function () {
         textAlign: "left"
     };
     exports.mapDetailLocationPhoto= {
-        width: Titanium.Platform.displayCaps.platformWidth,
+        width: '100%',
         top: defaults.TITLEBAR_HEIGHT + 206 + 'dp',
         height: '241dp'
     };
     // ACTIVITY INDICATOR STYLING
     exports.globalActivityIndicator= {
         top: defaults.TITLEBAR_HEIGHT +'dp',
-        width: deviceProxy.retrieveWidth(true) +'dp',
+        width: '100%',
         height: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT +'dp',
         color: '#fff',
         zIndex: 10,
@@ -580,7 +624,9 @@ exports.updateStyles = function () {
         exports.mapAnnotation.rightButton = Titanium.UI.iPhone.SystemButtonStyle.BORDERED;
     }
     
-    if(OS === 'android') {
+    if (OS === 'android') {
+        exports.portalFolderHeader.backgroundImage = '/images/secondarybarbg.png';
+        exports.portletRow.backgroundImage = '/images/portlet-row.png';
         exports.titleBar.backgroundImage = '/images/titlebarbg.png';
         exports.searchBar.backgroundImage = '/images/secondarybarbg.png';
         exports.mapNavView.backgroundImage = '/images/secondarybarbg.png';

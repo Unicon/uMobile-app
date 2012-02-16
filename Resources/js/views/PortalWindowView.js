@@ -42,16 +42,18 @@ exports.events = {
  
 var _state, styles, deviceProxy, localDictionary, app, config,
 _layoutState = exports.indicatorStates['NONE'],
-win, contentLayer, titleBar, activityIndicator, notificationsView, isNotificationsViewInitialized, portalGridView;
+win, contentLayer, titleBar, activityIndicator, notificationsView, isNotificationsViewInitialized, portletCollectionView;
 
 exports.open = function (_modules, _isGuestLayout, _isPortalReachable, _isFirstOpen) {
     Ti.API.debug('exports.open() in PortalWindowView');
-    app = app || require('/js/Facade');
+    app = app || require('/js/Constants');
     config = config || require('/js/config');
     styles = styles ? styles.updateStyles() : require('/js/style');
     deviceProxy = deviceProxy || require('/js/models/DeviceProxy');
     localDictionary = localDictionary || require('/js/localization')[Ti.App.Properties.getString('locale')];
-    portalGridView = require('/js/views/PortalGridView');
+    if (config.LAYOUT_VIEW === app.layoutTypes['GRID_LAYOUT']) portletCollectionView = require('/js/views/PortalGridView');
+    if (config.LAYOUT_VIEW === app.layoutTypes['FOLDER_LAYOUT']) portletCollectionView = require('/js/views/PortalFolderView');
+    portletCollectionView.open();
     notificationsView = require('/js/views/PortalNotificationsView');
     
     if (!win) win = Ti.UI.createWindow(styles.portalWindow);
@@ -63,7 +65,7 @@ exports.open = function (_modules, _isGuestLayout, _isPortalReachable, _isFirstO
     _drawUI(_isGuestLayout, _isPortalReachable);
     
     //Now that the UI is created, let's render the user's layout
-    portalGridView.updateGrid(_modules);
+    portletCollectionView.updateModules(_modules);
     
     //This view is done opening, so let's update the state
     setState(exports.states.OPENED);
@@ -74,6 +76,7 @@ exports.close = function () {
     win.hide();
     win.removeEventListener('android:search', _onAndroidSearch);
     setState(exports.states.HIDDEN);
+    portletCollectionView.close();
 };
 
 exports.rotateView = function (orientation) {
@@ -83,9 +86,8 @@ exports.rotateView = function (orientation) {
         contentLayer.height = styles.portalContentLayer.height;
     }
     if (isNotificationsViewInitialized) notificationsView.view().top = styles.homeGuestNote.top;
-    if (portalGridView) portalGridView.rotate(orientation, notificationsView.currentState() === notificationsView.states['HIDDEN'] ? false : true);
+    if (portletCollectionView) portletCollectionView.rotate(orientation, notificationsView.currentState() === notificationsView.states['HIDDEN'] ? false : true);
     if (activityIndicator) activityIndicator.rotate();
-    if (titleBar) titleBar.rotate();
 };
 
 function _drawUI (_isGuestLayout, _isPortalReachable) {
@@ -98,14 +100,14 @@ function _drawUI (_isGuestLayout, _isPortalReachable) {
         return;
     }
     
-    Ti.App.addEventListener(portalGridView.events['STATE_CHANGE'], _onPortalGridViewStateChange);
+    Ti.App.addEventListener(portletCollectionView.events['STATE_CHANGE'], _onPortalGridViewStateChange);
     Ti.App.addEventListener(notificationsView.events['EMERGENCY_NOTIFICATION'], _onEmergencyNotification);
     
     if (contentLayer) win.remove(contentLayer);
     
     contentLayer = Ti.UI.createView(styles.portalContentLayer);
     win.add(contentLayer);
-    contentLayer.add(portalGridView.retrieveGridView());
+    contentLayer.add(portletCollectionView.getView());
 
     _controlNotificationsBar();
 
@@ -133,7 +135,7 @@ function getState () {
 exports.updateLayout = function (_isPortalReachable, _isGuestLayout, _modules) {
     Ti.API.debug('exports.updateLayout() in PortalWindowView');
     Ti.API.debug('_isPortalReachable: '+_isPortalReachable+', _isGuestLayout: '+_isGuestLayout);
-    if (portalGridView && _modules) portalGridView.updateGrid(_modules);
+    if (portletCollectionView && _modules) portletCollectionView.updateModules(_modules);
     _layoutState = 
         _isPortalReachable === false ? exports.indicatorStates['NO_PORTAL'] : 
         _isGuestLayout ? exports.indicatorStates['GUEST'] : 
@@ -146,7 +148,7 @@ exports.updateLayout = function (_isPortalReachable, _isGuestLayout, _modules) {
 
 exports.showActivityIndicator = function (message) {
     Ti.API.debug('exports.showActivityIndicator() in PortalWindowView');
-    activityIndicator.saveLoadingMessage(message || localDictionary.loading);
+    activityIndicator.setLoadingMessage(message || localDictionary.loading);
     activityIndicator.view.show();
 };
 
@@ -176,7 +178,7 @@ exports.updateNotificationsView = function (notifications) {
     //Update the layout indicator with number of notifications, or emergency notification.
     if (isNotificationsViewInitialized) notificationsView.showNotificationSummary(notifications);
     
-    portalGridView.resizeGrid(notificationsView.currentState() === notificationsView.states['HIDDEN'] ? false : true);
+    portletCollectionView.resizeView(notificationsView.currentState() === notificationsView.states['HIDDEN'] ? false : true);
 };
 
 function _onEmergencyNotification (e) {
@@ -221,7 +223,7 @@ function _controlNotificationsBar () {
 function _removeNotificationsBar () {
     Ti.API.debug('_removeNotificationsBar() in PortalWindowView');
     notificationsView.hide();
-    portalGridView.resizeGrid(false);
+    portletCollectionView.resizeView(false);
 };
 
 function _addNotificationsBar () {
@@ -240,7 +242,7 @@ function _addNotificationsBar () {
     _method = _layoutState === exports.indicatorStates['NO_PORTAL'] ? 'showPortalUnreachableNote' : _layoutState === exports.indicatorStates['GUEST'] ? 'showGuestNote' : 'showNotificationSummary';
     notificationsView[_method]();
     
-    portalGridView.resizeGrid(notificationsView.currentState() === notificationsView.states['HIDDEN'] ? false : true);
+    portletCollectionView.resizeView(notificationsView.currentState() === notificationsView.states['HIDDEN'] ? false : true);
 };
 
 function _onAndroidSearch (e) {
@@ -265,8 +267,8 @@ function _onDimensionChanges (e) {
 
 
 function _onPortalGridViewStateChange (e) {
-    if (portalGridView && activityIndicator && e.state && e.state === portalGridView.states['COMPLETE']) {
-        exports.hideActivityIndicator(portalGridView.states['COMPLETE']);
+    if (portletCollectionView && activityIndicator && e.state && e.state === portletCollectionView.states['COMPLETE']) {
+        exports.hideActivityIndicator(portletCollectionView.states['COMPLETE']);
     }
 };
 

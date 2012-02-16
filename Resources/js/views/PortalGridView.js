@@ -27,15 +27,15 @@ exports.states = {
 };
 
 exports.events = {
-    STATE_CHANGE    : 'PortalGridViewStateChange'
+    STATE_CHANGE    : 'PortalCollectionViewStateChange'
 };
 
-var _completeWidth, _completeHeight, _numColumns, _leftPadding, _didLayoutCleanup = false, _state, _numGridItems = 0, _gridView, _gridItems = {}, styles, deviceProxy, portalProxy,
+var _completeWidth, _completeHeight, _numColumns, _leftPadding, _didLayoutCleanup = false, _state, _numGridItems = 0, _gridView, _gridItems = {}, styles, deviceProxy,
 _ = require('/js/libs/underscore-min'),
-app = require('/js/Facade'),
+app = require('/js/Constants'),
 portalProxy = require('/js/models/PortalProxy');
 
-function _init () {
+exports.open = function () {
     styles = require('/js/style').updateStyles();
     deviceProxy = require('/js/models/DeviceProxy');
     
@@ -44,30 +44,32 @@ function _init () {
     _numColumns = Math.floor(deviceProxy.retrieveWidth(true) / _completeWidth);
     _leftPadding = Math.floor(((deviceProxy.retrieveWidth(true) - (_completeWidth * _numColumns))) / 2);
     
-    _gridView = Titanium.UI.createScrollView(styles.homeGrid);
-    
-    exports.saveState(exports.states.INITIALIZED);
+    exports.setState(exports.states.INITIALIZED);
 };
 
-exports.retrieveState = function () {
+exports.close = function () {
+    _gridView = null;
+};
+
+exports.getState = function () {
     return _state;
 };
 
-exports.saveState = function (newState) {
+exports.setState = function (newState) {
     _state = newState;
     Ti.App.fireEvent(exports.events['STATE_CHANGE'], {state: _state});
     
 };
 
-exports.retrieveGridView = function () {
-    if (_didLayoutCleanup || !_gridView) {
-        _gridView = Titanium.UI.createScrollView(styles.homeGrid);
-    }
+exports.getView = function () {
+    if (!_gridView) _gridView = Titanium.UI.createScrollView(styles.homeGrid);
+    
     _rearrangeGrid();
     return _gridView;
 };
 
-exports.updateGrid = function (portlets) {
+exports.updateModules = function (portlets) {
+    Ti.API.debug('updateModules() in PortalGridView. portlets:'+JSON.stringify(portlets));
     var _portlets = portlets || [], _item;
 
     /*
@@ -115,7 +117,7 @@ exports.rotate = function (orientation, specialLayout) {
     _completeHeight = styles.gridItem.width + 2 * styles.gridItem.padding;
     _numColumns = Math.floor(deviceProxy.retrieveWidth(true) / _completeWidth);
     _leftPadding = Math.floor(((deviceProxy.retrieveWidth(true) - (_completeWidth * _numColumns))) / 2);
-    exports.resizeGrid(specialLayout);
+    exports.resizeView(specialLayout);
     _rearrangeGrid();
 };
 
@@ -153,7 +155,7 @@ function _createGridItem (portlet, sortOrder) {
         gridItemIconDefaults = _.clone(styles.gridIcon);
         
         gridItemIconDefaults.top += 'dp';
-        gridItemIconDefaults.image = portalProxy.retrieveIconUrl(portlet);
+        gridItemIconDefaults.image = portalProxy.getIconUrl(portlet);
         gridItemIcon = Ti.UI.createImageView(gridItemIconDefaults);
         gridItemIcon.portlet = portlet;
         gridItem.view.add(gridItemIcon);
@@ -214,18 +216,10 @@ function _rearrangeGrid () {
         }
     }
     
-    exports.saveState(_numGridItems > 0 ? exports.states.COMPLETE : exports.states.LOADING); 
+    exports.setState(_numGridItems > 0 ? exports.states.COMPLETE : exports.states.LOADING); 
 };
 
-exports.clear = function () {    
-    for (var _gridItem in _gridItems) {
-        if (_gridItems.hasOwnProperty(_gridItems)) {
-            _gridItem.removeEventListeners();
-        }
-    }
-};
-
-exports.resizeGrid = function (_isSpecialLayout) {
+exports.resizeView = function (_isSpecialLayout) {
     //Variable tells if the notifications bar is displayed or not
     _gridView.height = _isSpecialLayout ? styles.homeGrid.heightWithNote : styles.homeGrid.height;
 };
@@ -250,7 +244,7 @@ function _onGridItemPressDown (e) {
     }
 };
 
-_onGridItemPressUp = function (e) {
+function _onGridItemPressUp (e) {
     if(deviceProxy.isIOS()) {
         if (e.source.type === 'gridIcon') {
             e.source.getParent().setOpacity(1.0);
@@ -259,6 +253,4 @@ _onGridItemPressUp = function (e) {
             e.source.setOpacity(1.0);
         }
     }
-};
-
-_init();
+}

@@ -29,7 +29,7 @@ wasLogOutClicked = false;
 
 exports.open = function () {
     isOpen = true;
-    app = require('/js/Facade');
+    app = require('/js/Constants');
     _ = require('/js/libs/underscore-min');
     userProxy = require('/js/models/UserProxy');
     styles = require('/js/style');
@@ -44,8 +44,6 @@ exports.open = function () {
     credentials = userProxy.retrieveCredentials();
     
     win = Titanium.UI.createWindow({
-        // url: 'js/views/WindowContext.js',
-        modal: false,
         exitOnClose: false, 
         backgroundColor: styles.backgroundColor,
         orientationModes: [
@@ -69,8 +67,9 @@ exports.open = function () {
     createCredentialsForm();
     
     activityIndicator = require('/js/views/UI/ActivityIndicator').createActivityIndicator();
-    activityIndicator.resetDimensions();
+    
     win.add(activityIndicator.view);
+    activityIndicator.resetDimensions();
     activityIndicator.view.hide();
 };
 
@@ -224,7 +223,7 @@ function onUpdateCredentials (e) {
         }
         else {
             wasFormSubmitted = true;
-            activityIndicator.saveLoadingMessage(localDictionary.loggingIn);
+            activityIndicator.setLoadingMessage(localDictionary.loggingIn);
             activityIndicator.view.show();
             userProxy.saveCredentials({
                 username: usernameInput.value, 
@@ -276,6 +275,7 @@ function onWindowBlur (e) {
 
 //LoginProxy events
 function onSessionSuccess (e) {
+    Ti.API.debug('onSessionSuccess() in SettingsWindowController. e.user: '+e.user);
     var _toast;
     activityIndicator.view.hide();
     if (!isOpen || (!wasFormSubmitted && !wasLogOutClicked)) return;
@@ -318,6 +318,7 @@ function onSessionSuccess (e) {
 }
 
 function onPortalProxyPortletsLoaded (e) {
+    Ti.API.debug('onPortalProxyPortletsLoaded() in SettingsWindowController');
     if (!wasFormSubmitted) return onSessionError(e);;
     Ti.App.fireEvent(app.events['SHOW_WINDOW'], {newWindow: config.HOME_KEY});
     wasFormSubmitted = false;
@@ -326,6 +327,7 @@ function onPortalProxyPortletsLoaded (e) {
 }
 
 function onSessionError (e) {
+    Ti.API.debug('onSessionError() in SettingsWindowController');
     activityIndicator.view.hide();
     
     //If we at least received a user layout back from the service

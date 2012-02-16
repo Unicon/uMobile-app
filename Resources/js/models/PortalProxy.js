@@ -16,10 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-** @constructor
-*/
-//Implemented as a static object so other scripts can access before an instance of the proxy exists.
 
 exports.states = {
     INITIALIZED             : "Initialized",
@@ -30,42 +26,94 @@ exports.states = {
 
 var currentState = exports.states['INITIALIZED'],
 isPortalReachable,
-app = require('/js/Facade'),
+app = require('/js/Constants'),
 config = require('/js/config'),
 resourceProxy = require('/js/models/ResourceProxy'),
 pathToRoot = '../../',
-portlets = [];
+portlets = [], //Portlet model: {fname:"unique", title:"Human Readable", url: "portal_url", description: "...", newItemCount: 0, iconUrl: "/path/on/portal.png", folders: ["id1","id2"]};
+folders = []; //Folder model: {id: "u12345", title: "Campus", numChildren: 2 }
 
 Ti.App.addEventListener(app.portalEvents['PORTLETS_RETRIEVED_SUCCESS'], function (e) {
-    exports.savePortlets(e.portlets);
+    exports.setPortlets(e.portlets);
 });
 Ti.App.addEventListener(app.loginEvents['NETWORK_SESSION_FAILURE'], function (e){
-    exports.savePortlets([]);
+    exports.setPortlets([]);
 });
 
 Ti.App.addEventListener(app.portalEvents['PORTAL_REACHABLE'], function (e){
     Ti.API.debug('PORTAL_REACHABLE event received in PortalProxy. e: '+JSON.stringify(e));
-    exports.saveIsPortalReachable(e.reachable);
+    exports.setIsPortalReachable(e.reachable);
 });
 
-exports.retrievePortlets = function () {
-    Ti.API.debug('retrievePortlets() in PortalProxy. Portlets: '+JSON.stringify(portlets));
-    return portlets;
+exports.getPortlets = function (folder) {
+    Ti.API.debug('getPortlets() in PortalProxy. Portlets: '+JSON.stringify(portlets));
+    if (!folder) return portlets;
+    
+    //Let's iterate through all of the portlets and find which ones contain the folder id.
+    var i = 0, l=portlets.length, _portletsByFolder = [];
+    while (i++ != l) {
+        portlets[i-1] && portlets[i-1].folders && portlets[i-1].folders.indexOf(folder) > -1 && _portletsByFolder.push(portlets[i-1]);
+    }
+    return _portletsByFolder;
 };
 
-exports.savePortlets = function (_portlets) {
-    Ti.API.debug('savePortlets() in PortalProxy');
-    var nativeModules = config.retrieveLocalModules(), module;
+exports.getFolderList = function () {
+    /*
+        This method returns a list of folders, so the home view can 
+        let the user choose which portlets they want to see.
+    */
+    return folders;
+};
 
+function _processFolderLayout (layout) {
+    var _folders = layout[0]["folders"], _portlets = {};
+    //First, we'll populate the module's folders array
+    var l = _folders.length, i=0, _currentFolder, _currentPortlet, j, pLength;
+    while (i++ != l) {
+        _currentFolder = _folders[i-1];
+        j = 0;
+        pLength = _currentFolder.portlets.length;
+        folders.push({
+            id: _currentFolder.id, 
+            title: _currentFolder.title, 
+            numChildren: pLength
+        });
+        //Let's add this folder's portlets to the _portlets Object. 
+        //We'll worry about sorting later.
+        while (j++ != pLength) {
+            _currentPortlet = _currentFolder.portlets[j-1];
+            if (_currentPortlet.fname in _portlets) {
+                _portlets[_currentPortlet.fname].folders.push(_currentFolder.id);
+            }
+            else {
+                _portlets[_currentPortlet.fname] = _currentPortlet;
+                _portlets[_currentPortlet.fname].folders = [_currentFolder.id];
+            }
+        }
+    }
+    
+    //Now we'll arrange the portlets in a sorted array.
+    //First we'll create a new array, and add each portlet.
+    portlets = [];
+    for (var _portlet in _portlets) {
+        if (_portlets.hasOwnProperty(_portlet)) {
+            portlets.push(_portlets[_portlet]);
+        }
+    }
+    
+    var nativeModules = config.retrieveLocalModules(), module;
     for (module in nativeModules) {
         if (nativeModules.hasOwnProperty(module)) {
             nativeModules[module].added = false;
         }
     }
-    for (var i = 0, iLength = _portlets.length; i<iLength; i++ ) {
-        if(nativeModules[_portlets[i].fname]) {
-            _portlets[i] = nativeModules[_portlets[i].fname];
-            nativeModules[_portlets[i].fname].added = true;
+    
+    /* Here we want to override any portlets from the portal with
+    native modules if there is a matching fname */
+    for (var i = 0, iLength = portlets.length; i<iLength; i++ ) {
+        if(nativeModules[portlets[i].fname]) {
+            portlets[i] = nativeModules[portlets[i].fname];
+            nativeModules[portlets[i].fname].added = true;
         }
     }
 
@@ -74,20 +122,76 @@ exports.savePortlets = function (_portlets) {
             if(nativeModules[module].title && !nativeModules[module].added && !nativeModules[module].doesRequireLayout) {
                 // As long as the module has a title, hasn't already been added, and doesn't 
                 // require the fname for the module to be returned in the personalized layout.
-                _portlets.push(nativeModules[module]);
+                portlets.push(nativeModules[module]);
+            }
+        }
+    }
+    
+    portlets.sort(_sortPortlets);
+    Ti.API.debug('Final folders: '+JSON.stringify(folders));
+    Ti.API.debug('Final portlets: '+JSON.stringify(portlets));
+    
+    //Set the state of the portal proxy. Assume local portlets only if layout.length < 1
+    exports.setState(exports.states[portlets.length > 0 ? 'PORTLETS_LOADED' : 'PORTLETS_LOADED_LOCAL']);
+    Ti.App.fireEvent(app.portalEvents['PORTLETS_LOADED'], { state: exports.getState() });
+}
+
+function _processFlatLayout (layout) {
+    Ti.API.debug('_processFlatLayout() in PortalProxy. layout: '+JSON.stringify(layout));
+    /*
+        This method is called if the app is configured to to accept a layout
+        from the portal without any folders, eg layout: [{portlet},{portlet}]
+    */
+    var nativeModules = config.retrieveLocalModules(), module;
+
+    /* [Jeff Cross] Since nativeModules is now a local variable, updated each time
+    this method is called, it seems that this loop isn't necessary.*/
+    for (module in nativeModules) {
+        if (nativeModules.hasOwnProperty(module)) {
+            nativeModules[module].added = false;
+        }
+    }
+    
+    /* Here we want to override any portlets from the portal with
+    native modules if there is a matching fname */
+    for (var i = 0, iLength = layout.length; i<iLength; i++ ) {
+        if(nativeModules[layout[i].fname]) {
+            layout[i] = nativeModules[layout[i].fname];
+            nativeModules[layout[i].fname].added = true;
+        }
+    }
+
+    for (module in nativeModules) {
+        if (nativeModules.hasOwnProperty(module)) {
+            if(nativeModules[module].title && !nativeModules[module].added && !nativeModules[module].doesRequireLayout) {
+                // As long as the module has a title, hasn't already been added, and doesn't 
+                // require the fname for the module to be returned in the personalized layout.
+                layout.push(nativeModules[module]);
             }
         }
     }
 
-    _portlets.sort(exports._sortPortlets);
+    layout.sort(_sortPortlets);
     
-    //Set the state of the portal proxy. Assume local portlets only if _portlets.length < 1
-    exports.saveState(exports.states[_portlets.length > 0 ? 'PORTLETS_LOADED' : 'PORTLETS_LOADED_LOCAL']);
-    portlets = _portlets;
-    Ti.App.fireEvent(app.portalEvents['PORTLETS_LOADED'], { state: exports.retrieveState() });
+    //Set the state of the portal proxy. Assume local portlets only if layout.length < 1
+    exports.setState(exports.states[layout.length > 0 ? 'PORTLETS_LOADED' : 'PORTLETS_LOADED_LOCAL']);
+    portlets = layout;
+    Ti.App.fireEvent(app.portalEvents['PORTLETS_LOADED'], { state: exports.getState() });
+}
+
+exports.setPortlets = function (_portlets) {
+    Ti.API.debug('setPortlets() in PortalProxy. _portlets:'+JSON.stringify(_portlets));
+    if (_portlets[0] && typeof _portlets[0] === "object" && "folders" in _portlets[0]) {
+        Ti.API.debug('We are dealing with a nested layout.');
+        _processFolderLayout(_portlets);
+    }
+    else {
+        Ti.API.debug('We are dealing with a flat layout.');
+        _processFlatLayout(_portlets);
+    }
 };
 
-exports.retrievePortletByFName = function (fname) {
+exports.getPortletByFName = function (fname) {
 	for (var i=0, iLength = portlets.length; i<iLength; i++ ) {
 		if (portlets[i].fname === fname) {
 			return portlets[i];
@@ -96,7 +200,7 @@ exports.retrievePortletByFName = function (fname) {
 	return false;
 };
 
-exports._sortPortlets = function(a, b) {
+function _sortPortlets (a, b) {
     if (!a.title || !b.title) {
         return -1;
     }
@@ -119,39 +223,23 @@ exports._sortPortlets = function(a, b) {
 
 };
 
-exports.retrieveIconUrl = function (p) {
-    var _iconUrl;
-
-    if (resourceProxy.retrievePortletIcon(p.fname)) {
-        _iconUrl = resourceProxy.retrievePortletIcon(p.fname);
-    }
-    else if (p.iconUrl && p.iconUrl.indexOf('/') == 0) {
-        _iconUrl = config.BASE_PORTAL_URL + p.iconUrl;
-    } 
-    else if (p.iconUrl) {
-        _iconUrl = pathToRoot + p.iconUrl;
-    } 
-    else {
-        _iconUrl = config.BASE_PORTAL_URL + '/ResourceServingWebapp/rs/tango/0.8.90/32x32/categories/applications-other.png';
-    }
-
-    return _iconUrl;
+exports.getIconUrl = function (p) {
+    if (resourceProxy.retrievePortletIcon(p.fname)) return resourceProxy.retrievePortletIcon(p.fname);
+    if (p.iconUrl && p.iconUrl.indexOf('/') == 0)  return config.BASE_PORTAL_URL + p.iconUrl;
+    if (p.iconUrl) return pathToRoot + p.iconUrl;
+    return config.BASE_PORTAL_URL + '/ResourceServingWebapp/rs/tango/0.8.90/32x32/categories/applications-other.png';
 };
 
-exports.retrieveIsPortalReachable = function () {
+exports.getIsPortalReachable = function () {
     return isPortalReachable;
 };
 
-exports.saveIsPortalReachable = function (newval) {
-    if (typeof newval == "boolean") {
-        isPortalReachable = newval;
-    }
-    else {
-        Ti.API.error("Couldn't set value of _isPortalReachable, wasn't type 'boolean' but was type: " + typeof newval);
-    }
+exports.setIsPortalReachable = function (newval) {
+    if (typeof newval == "boolean") return isPortalReachable = newval;
+    Ti.API.error("Couldn't set value of _isPortalReachable, wasn't type 'boolean' but was type: " + typeof newval);
 };
 
-exports.saveState = function (_state) {
+exports.setState = function (_state) {
     for (var state in exports.states) {
         if (exports.states.hasOwnProperty(state)) {
             if (exports.states[state] === _state) {
@@ -161,6 +249,6 @@ exports.saveState = function (_state) {
     }
 };
 
-exports.retrieveState = function () {
+exports.getState = function () {
     return currentState;
 };

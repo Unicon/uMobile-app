@@ -1,7 +1,7 @@
 
     // Partial view used in almost every view, which places a title bar at the top of the screen with some optional attributes.
     //Optional attributes include top, left, height, title, homeButton (bool), backButton (View), settingsButton (bool)
-var app = require('/js/Facade'),
+var app = require('/js/Constants'),
 styles = require('/js/style'),
 config = require('/js/config'),
 _ = require('/js/libs/underscore-min'),
@@ -71,13 +71,6 @@ exports.createTitleBar = function () {
         settingsButtonContainer.show();
     };
 
-    titleBar.rotate = function (orientation) {
-        styles = styles.updateStyles();
-        if (titleBar) titleBar.view.width = styles.titleBar.width;
-        if (settingsButtonContainer) settingsButtonContainer.left = styles.titleBarSettingsContainer.left;
-        if (homeButtonContainer) homeButtonContainer.left = styles.titleBarHomeContainer.left;
-        if (infoButtonContainer) infoButtonContainer.left = styles.titleBarInfoContainer.left;
-    };
 
     function onHomeClick (e) {
         Ti.App.fireEvent(app.events['SHOW_WINDOW'], {newWindow: config.HOME_KEY});
