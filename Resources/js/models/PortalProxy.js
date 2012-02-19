@@ -62,11 +62,14 @@ exports.getFolderList = function () {
         This method returns a list of folders, so the home view can 
         let the user choose which portlets they want to see.
     */
+    Ti.API.debug('getFolderList() in PortalProxy. folders: '+JSON.stringify(folders));
     return folders;
 };
 
 function _processFolderLayout (layout) {
-    var _folders = layout[0]["folders"], _portlets = {};
+    Ti.API.debug('_processFolderLayout() in PortalProxy.');
+    var _folders = layout["folders"], _portlets = {};
+    folders = [];
     //First, we'll populate the module's folders array
     var l = _folders.length, i=0, _currentFolder, _currentPortlet, j, pLength;
     while (i++ != l) {
@@ -112,24 +115,32 @@ function _processFolderLayout (layout) {
     native modules if there is a matching fname */
     for (var i = 0, iLength = portlets.length; i<iLength; i++ ) {
         if(nativeModules[portlets[i].fname]) {
+            nativeModules[portlets[i].fname].folders = portlets[i].folders;
             portlets[i] = nativeModules[portlets[i].fname];
             nativeModules[portlets[i].fname].added = true;
         }
     }
-
+    
+    // Now we'll add any native modules to the collection 
+    // if they aren't overriding a portlet from the layout
     for (module in nativeModules) {
         if (nativeModules.hasOwnProperty(module)) {
             if(nativeModules[module].title && !nativeModules[module].added && !nativeModules[module].doesRequireLayout) {
                 // As long as the module has a title, hasn't already been added, and doesn't 
                 // require the fname for the module to be returned in the personalized layout.
+                
+                //If there's no folder for this one, let's assign it to the first folder's id or nil
+                
+                if (!nativeModules[module].folders && folders.length > 0) {
+                    nativeModules[module].folders = [folders[0].id];
+                    folders[0].numChildren++;
+                }
                 portlets.push(nativeModules[module]);
             }
         }
     }
     
     portlets.sort(_sortPortlets);
-    Ti.API.debug('Final folders: '+JSON.stringify(folders));
-    Ti.API.debug('Final portlets: '+JSON.stringify(portlets));
     
     //Set the state of the portal proxy. Assume local portlets only if layout.length < 1
     exports.setState(exports.states[portlets.length > 0 ? 'PORTLETS_LOADED' : 'PORTLETS_LOADED_LOCAL']);
@@ -137,7 +148,7 @@ function _processFolderLayout (layout) {
 }
 
 function _processFlatLayout (layout) {
-    Ti.API.debug('_processFlatLayout() in PortalProxy. layout: '+JSON.stringify(layout));
+    Ti.API.debug('_processFlatLayout() in PortalProxy');
     /*
         This method is called if the app is configured to to accept a layout
         from the portal without any folders, eg layout: [{portlet},{portlet}]
@@ -181,7 +192,7 @@ function _processFlatLayout (layout) {
 
 exports.setPortlets = function (_portlets) {
     Ti.API.debug('setPortlets() in PortalProxy. _portlets:'+JSON.stringify(_portlets));
-    if (_portlets[0] && typeof _portlets[0] === "object" && "folders" in _portlets[0]) {
+    if (_portlets && "folders" in _portlets) {
         Ti.API.debug('We are dealing with a nested layout.');
         _processFolderLayout(_portlets);
     }
