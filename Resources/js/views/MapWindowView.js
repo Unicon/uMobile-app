@@ -259,10 +259,16 @@ exports.doSetView = function (newView, viewModel) {
 var _createMainView = function() {
     var mapViewOpts;
     
-    titleBar = require('/js/views/UI/TitleBar').createTitleBar();
     deviceProxy = require('/js/models/DeviceProxy');
+    
+    activityIndicator = require('/js/views/UI/ActivityIndicator').createActivityIndicator();
+    view.add(activityIndicator.view);
+    activityIndicator.view.hide();
+    
+    titleBar = require('/js/views/UI/TitleBar').createTitleBar();
     titleBar.updateTitle(localDictionary.map);
     titleBar.addHomeButton();
+    view.add(titleBar.view);
 
     if ((deviceProxy.isAndroid() && !mapView) || deviceProxy.isIOS()) {
         // create the map view
@@ -282,12 +288,6 @@ var _createMainView = function() {
         view.add(mapView);
     }
 
-    view.add(titleBar.view);
-    
-    activityIndicator = require('/js/views/UI/ActivityIndicator').createActivityIndicator();
-    view.add(activityIndicator.view);
-    activityIndicator.view.hide();
-
     searchBar = require('/js/views/UI/SearchBar').createSearchBar();
     view.add(searchBar.container);
     searchBar.input.addEventListener('return', _searchSubmit);
@@ -298,12 +298,10 @@ var _createMainView = function() {
     if (deviceProxy.isIOS()) {
         bottomNavButtons = Ti.UI.iOS.createTabbedBar(styles.mapButtonBar);
         bottomNavButtons.labels = exports.navButtonValues;
-        bottomNavButtons.width = 225;
         bottomNavButtons.index = 0;        
     }
     else {
         bottomNavButtons = require('/js/views/UI/TabbedBar').createTabbedBar();
-        bottomNavButtons.doSetWidth(deviceProxy.retrieveWidth(true));
         bottomNavButtons.doSetLabels(exports.navButtonValues);
         bottomNavButtons.doSetIndex(0);
     }

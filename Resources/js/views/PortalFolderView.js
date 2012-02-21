@@ -11,12 +11,13 @@ exports.events = {
 };
 
 var _state, _folders, portletListViewsByFolder = {}, view, activeFolder,
-styles, deviceProxy, _, app, portalProxy, rowContainer;
+localDictionary, styles, deviceProxy, _, app, portalProxy, rowContainer;
 
 exports.open = function () {
     Ti.API.debug('exports.open() in PortalFolderView');
     styles = require('/js/style');
     deviceProxy = require('/js/models/DeviceProxy');
+    localDictionary = require('/js/localization');
     _ = require('/js/libs/underscore-min');
     app = require('/js/Constants');
     portalProxy = require('/js/models/PortalProxy');
@@ -119,11 +120,10 @@ function updateFolderListView(folders, activeFolderId) {
         });
         rowContainer.add(_folderPortletsView);
         
-        
         portletListViewsByFolder[folders[i-1].id] = _folderPortletsView;
         
         j = 0;
-        var _portlets = portalProxy.getPortlets(folders[i-1].id), p = _portlets.length;
+        var _portlets = portalProxy.getPortlets(folders[i-1].id === 'no_folders' ? '' : folders[i-1].id), p = _portlets.length;
 
         while (j++ != p) {
             var _portletRow = Ti.UI.createView(styles.portletRow);
@@ -157,14 +157,17 @@ exports.updateModules = function (portlets) {
     //This method will be called whenever new portlets are loaded. 
     //The current view should be updated, but it should stay in the current context
     _folders = portalProxy.getFolderList();
+    if (_folders.length === 0) _folders = [{id:'no_folders', title: localDictionary.home, numChildren: portalProxy.getPortlets().length}];
     Ti.API.debug('folders: '+JSON.stringify(_folders));
     updateFolderListView(_folders);
-    
 };
 
 exports.resizeView = function (_isSpecialLayout) {
     //Variable tells if the notifications bar is displayed or not
-    view.height = _isSpecialLayout ? styles.homeGrid.heightWithNote : styles.homeGrid.height;
+    styles = styles.updateStyles();
+    Ti.API.debug('resizeView() in PortalFolderView. styles.homeGrid.height: '+styles.homeGrid.height);
+    if (view) view.height = _isSpecialLayout ? styles.homeGrid.heightWithNote : styles.homeGrid.height;
+    if (rowContainer) rowContainer.height = _isSpecialLayout ? styles.portalFolderView.heightWithNote : styles.portalFolderView.height;
 };
 
 exports.getView = function () {

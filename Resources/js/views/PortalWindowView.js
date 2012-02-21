@@ -59,7 +59,13 @@ exports.open = function (_modules, _isGuestLayout, _isPortalReachable, _isFirstO
     if (!win) win = Ti.UI.createWindow(styles.portalWindow);
     win[getState() === exports.states['INITIALIZED'] ? 'open' : 'show']();
     if (deviceProxy.isIOS()) win.visible = true;
-    win.addEventListener('android:search', _onAndroidSearch);
+    if (deviceProxy.isAndroid()) {
+        win.addEventListener('android:search', _onAndroidSearch);
+        win.addEventListener('focus', function (e) {
+            Ti.API.debug('home window has gained focus.');
+            require('/js/models/WindowManager').setCurrentWindow(config.HOME_KEY);
+        });
+    }
     
     //Let's create the UI elements.
     _drawUI(_isGuestLayout, _isPortalReachable);
@@ -88,7 +94,6 @@ exports.rotateView = function (orientation) {
     }
     if (isNotificationsViewInitialized) notificationsView.view().top = styles.homeGuestNote.top;
     if (portletCollectionView) portletCollectionView.rotate(orientation, notificationsView.currentState() === notificationsView.states['HIDDEN'] ? false : true);
-    if (activityIndicator) activityIndicator.rotate();
 };
 
 function _drawUI (_isGuestLayout, _isPortalReachable) {
@@ -105,7 +110,6 @@ function _drawUI (_isGuestLayout, _isPortalReachable) {
     Ti.App.addEventListener(notificationsView.events['EMERGENCY_NOTIFICATION'], _onEmergencyNotification);
     
     if (contentLayer) win.remove(contentLayer);
-    
     contentLayer = Ti.UI.createView(styles.portalContentLayer);
     win.add(contentLayer);
     contentLayer.add(portletCollectionView.getView());
@@ -116,7 +120,6 @@ function _drawUI (_isGuestLayout, _isPortalReachable) {
     win.add(activityIndicator.view);
 
     titleBar = require('/js/views/UI/TitleBar').createTitleBar();
-    
     win.add(titleBar.view);
     titleBar.addSettingsButton();
     titleBar.addInfoButton();
@@ -155,7 +158,7 @@ exports.showActivityIndicator = function (message) {
 
 exports.hideActivityIndicator = function () {
     Ti.API.debug('exports.hideActivityIndicator() in PortalWindowView');
-    activityIndicator.view.hide();
+    if (activityIndicator) activityIndicator.view.hide();
 };
 
 exports.alert = function (title, message) {
@@ -199,7 +202,10 @@ function _specialLayoutIndicatorClick (e) {
             break;
         case notificationsView.states['NOTIFICATIONS_SUMMARY']:
             // notificationsView.showNotificationsList();
-            if (_emergencyNote = notificationsView.emergencyNote()) exports.alert(localDictionary.emergencyNotification, _emergencyNote.message);
+            if (notificationsView.emergencyNote) {
+                _emergencyNote = notificationsView.emergencyNote(); 
+                exports.alert(localDictionary.emergencyNotification, _emergencyNote.message);
+            }
             break;
         case notificationsView.states['NOTIFICATIONS_EXPANDED']:
             notificationsView.hideNotificationsList();
