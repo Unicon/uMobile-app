@@ -87,11 +87,24 @@ exports.updateStyles = function () {
         width:'auto',
         color: '#000'
     };
+    //Settings Properties
     exports.settingsTable= {
-        top: defaults.TITLEBAR_HEIGHT,
+        top: defaults.TITLEBAR_HEIGHT + 'dp',
         style: OS === 'iphone' || OS === 'ipad' ? Titanium.UI.iPhone.TableViewStyle.GROUPED : 0
     };
-    //Settings Properties
+    exports.settingsWindow = {
+        backgroundColor: exports.backgroundColor,
+        navBarHidden: true,
+        fullScreen: false,
+        orientationModes: [
+        	Titanium.UI.PORTRAIT,
+        	Titanium.UI.UPSIDE_PORTRAIT,
+        	Titanium.UI.LANDSCAPE_LEFT,
+        	Titanium.UI.LANDSCAPE_RIGHT,
+        	Titanium.UI.FACE_UP,
+        	Titanium.UI.FACE_DOWN
+        ]
+    };
     exports.settingsPasswordInput= {
       height: OS === 'iphone' ? '35' : '45dp',
     	borderStyle:Titanium.UI.INPUT_BORDERSTYLE_NONE,
@@ -165,7 +178,7 @@ exports.updateStyles = function () {
     	height: defaults.TITLEBAR_HEIGHT,
         backgroundGradient: defaults.PRIMARY_BAR_BACKGROUND_GRADIENT,
         width: '100%',
-    	zIndex: 10
+    	zIndex: 50
     };
     //Titanium.UI.Button implemented in the GenericTitleBar
     exports.titleBarButton= {
@@ -273,8 +286,8 @@ exports.updateStyles = function () {
         height: '30dp',
         plainHeight: 30,
         optionalImage: '/images/back-icon.png',
-    	backgroundImage: 'img/secondarybarbtnbg.png',
-    	backgroundSelectedImage: 'img/secondarybarbtnbg_press.png',
+    	backgroundImage: '/images/secondarybarbtnbg.png',
+    	backgroundSelectedImage: '/images/secondarybarbtnbg_press.png',
     	color: '#fff',
     	selectedColor: "#fff",
         borderRadius: 10,
@@ -300,14 +313,18 @@ exports.updateStyles = function () {
     };
     exports.portalContentLayer= {
         top: defaults.TITLEBAR_HEIGHT + 'dp',
+        bottom: 0,
+        bottomWithNote: '40dp',
         width: '100%',
-        height: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT - defaults.STATUSBAR_HEIGHT + 'dp',
+        // height: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT - defaults.STATUSBAR_HEIGHT + 'dp',
         backgroundColor: "#2A4F95"
     };
     exports.homeGrid= {
         top: 0,
-        height: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT - defaults.STATUSBAR_HEIGHT + 'dp',
-        heightWithNote: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT - defaults.STATUSBAR_HEIGHT - 40 +'dp',
+        // height: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT - defaults.STATUSBAR_HEIGHT + 'dp',
+        // heightWithNote: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT - defaults.STATUSBAR_HEIGHT - 40 +'dp',
+        heightWithNote: '100%',
+        height: '100%',
         color: "#fff",
         contentHeight:'auto',
         width: '100%',
@@ -317,10 +334,13 @@ exports.updateStyles = function () {
         top: 0,
         backgroundColor: '#fff',
         width:'100%',
-        height: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT - defaults.STATUSBAR_HEIGHT + 'dp',
-        heightWithNote: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT - defaults.STATUSBAR_HEIGHT - 40 +'dp',
+        height: '100%'
+    };
+    exports.portalRowContainer = {
         layout: 'vertical',
-        contentHeight: 'auto'
+        height: '100%',
+        contentHeight: 'auto',
+        width: '100%'
     };
     exports.portalFolderHeader = {
         height: '40dp',
@@ -373,7 +393,7 @@ exports.updateStyles = function () {
     exports.homeGuestNote = {
         height: '40dp',
         rawHeight: 40,
-        top: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT - 40 - defaults.STATUSBAR_HEIGHT + 'dp',
+        bottom: 0,
         backgroundGradient: defaults.SECONDARY_BAR_BACKGROUND_GRADIENT,
         emergencyBackgroundImage: '/images/secondarybarbg-emergency.png',
         emergencyBackgroundGradient: {
@@ -442,7 +462,7 @@ exports.updateStyles = function () {
         backgroundColor: defaults.DETAIL_TOP_BACKGROUND_COLOR,
         visible: false,
         top: defaults.TITLEBAR_HEIGHT + 'dp',
-        height: deviceProxy.retrieveHeight(true) - defaults.TITLEBAR_HEIGHT + 'dp',
+        bottom: 0,
         width: '100%',
         modal: true
     };
@@ -495,7 +515,8 @@ exports.updateStyles = function () {
     // MAP STYLES
     exports.mapView= {
         top: defaults.TITLEBAR_HEIGHT * 2 + 'dp',
-        height: deviceProxy.retrieveHeight(true) - (defaults.TITLEBAR_HEIGHT * 2 + defaults.STATUSBAR_HEIGHT + 50) + 'dp',
+        // height: deviceProxy.retrieveHeight(true) - (defaults.TITLEBAR_HEIGHT * 2 + defaults.STATUSBAR_HEIGHT + 50) + 'dp',
+        bottom: '50dp',
         mapType: Titanium.Map.STANDARD_TYPE,
         regionFit: true,
         animate: true,
@@ -506,7 +527,7 @@ exports.updateStyles = function () {
     };
     exports.mapTableView = {
         top: defaults.TITLEBAR_HEIGHT * 2 + 'dp',
-        height: deviceProxy.retrieveHeight(true) - (defaults.TITLEBAR_HEIGHT + defaults.TITLEBAR_HEIGHT + defaults.STATUSBAR_HEIGHT + 50) + 'dp'
+        bottom: '50dp'
     };
     exports.mapCategoryRow= {
         font: {
@@ -528,7 +549,7 @@ exports.updateStyles = function () {
         textAlign: 'center'
     };
     exports.mapNavView= {
-        top: deviceProxy.retrieveHeight(true) - 50 - defaults.STATUSBAR_HEIGHT + 'dp',
+        bottom: 0,
         height : '50dp',
         backgroundGradient : defaults.SECONDARY_BAR_BACKGROUND_GRADIENT
     };
@@ -540,6 +561,18 @@ exports.updateStyles = function () {
         getHeight: OS === "iphone" ? 35 : 50,
         layout: 'horizontal',
         width: deviceProxy.isAndroid() ? '100%' : 225
+    };
+    exports.tabbedBarButton = {
+        color: "#fff",
+        font: {
+            fontSize: '14dp',
+            fontWeight: 'bold'
+        },
+        height: '100%',
+        top: 0,
+        borderRadius: 0,
+        backgroundImage: '/images/secondarybarbg.png',
+        backgroundDisabledImage: '/images/secondarybarbtnbg_press.png'
     };
     exports.mapDetailTopView= {
         top: defaults.TITLEBAR_HEIGHT+'dp',
@@ -587,7 +620,8 @@ exports.updateStyles = function () {
         width: '100%',
         height: '100%',
         color: '#fff',
-        backgroundImage: '/images/bgActivityIndicator.png'
+        backgroundImage: '/images/bgActivityIndicator.png',
+        zIndex: 49
     };
     exports.activityIndicatorDialog= {
         width: (deviceProxy.retrieveWidth(true) > 480) ? '360dp' : '75%',
@@ -645,7 +679,6 @@ exports.updateStyles = function () {
         exports.mapNavView.backgroundImage = '/images/secondarybarbg.png';
         exports.secondaryNavBar.backgroundImage = '/images/secondarybarbg.png';
         exports.homeGuestNote.backgroundImage = '/images/secondarybarbg.png';
-        // exports.mapAnnotation.image = '/images/mapPin.png';
         exports.mapAnnotation.pincolor = Titanium.Map.ANNOTATION_RED;
     }
     

@@ -73,11 +73,6 @@ exports.saveActivityIndicatorMessage = function (message) {
 };
 
 exports.rotate = function (orientation) {
-    styles = styles.updateStyles();
-    if (mapView) mapView.height = styles.mapView.height;
-    if (bottomNavView) bottomNavView.top = styles.mapNavView.top;
-
-    if (categoryBrowsingView) categoryBrowsingView.height = styles.mapTableView.height;
 };
 
 exports.resetMapLocation = function () {
@@ -90,8 +85,9 @@ exports.searchBlur = function (e) {
 
 exports.openCategoryBrowsingView = function (categories) {
     _hideAllViews();
+    bottomNavButtons.doSetIndex(1);
     
-    if (categories.length === 1) return exports.openCategoryLocationsListView(require('/js/models/MapProxy').retrieveLocationsByCategory(categories[0].name));
+    if (categories.length === 1) return exports.openCategoryLocationsListView(mapProxy.retrieveLocationsByCategory(categories[0].name));
     // If there isn't a categoryNavBar yet, go ahead and create one.
     if (!categoryNavBar) _createAndAddCategoryNav();
     
@@ -114,7 +110,10 @@ exports.openCategoryBrowsingView = function (categories) {
             _data.push(Titanium.UI.createTableViewRow(_rowStyle));
             
             // Add a count to the row with number of children for category.
-            _labelStyle.text = c[i]['numChildren'];
+            Ti.API.debug(c[i]['numChildren']);
+            _labelStyle.text = c[i]['numChildren'].toString();
+            //Android is adding a decimal to this number for whatever reason, so we'll replace the string.
+            if (deviceProxy.isAndroid() && _labelStyle.text.indexOf('.0') > -1) _labelStyle.text = _labelStyle.text.replace('.0','');
             _data[i].add(Ti.UI.createLabel(_labelStyle));
             
             if (deviceProxy.isAndroid()) {
@@ -144,16 +143,14 @@ exports.openCategoryBrowsingView = function (categories) {
     })(categories);
     
     // Create the view to hold tableviews listing categories and locations.
-    categoryBrowsingView = Ti.UI.createTableView({
-        data: _categoryBrowsingData,
-        height: styles.mapTableView.height,
-        top: styles.mapTableView.top
-    });
+    categoryBrowsingView = Ti.UI.createTableView(styles.mapTableView);
+    categoryBrowsingView.setData(_categoryBrowsingData);
     view.add(categoryBrowsingView);
 };
 
 exports.openCategoryLocationsListView = function (viewModel) {
     _hideAllViews();
+    bottomNavButtons.doSetIndex(1);
     
     if (!categoryLocationsListView) {
         categoryLocationsListView = Ti.UI.createTableView(styles.mapTableView);
@@ -167,7 +164,7 @@ exports.openCategoryLocationsListView = function (viewModel) {
     if (!categoryNavBar) _createAndAddCategoryNav();
     categoryNavBar.view.show();
     
-    categoryNavBar.leftButton[require('/js/models/MapProxy').retrieveTotalCategories() > 1 ? 'show' : 'hide']();
+    categoryNavBar.leftButton[mapProxy.retrieveTotalCategories() > 1 ? 'show' : 'hide']();
     categoryNavBar.titleLabel.text = viewModel.categoryName;
     categoryNavBar.rightButton.title = localDictionary.map;
     categoryNavBar.rightButton.show();
@@ -177,6 +174,8 @@ exports.openCategoryLocationsListView = function (viewModel) {
 
 exports.openCategoryLocationsMapView = function (viewModel) {
     _hideAllViews();
+    bottomNavButtons.doSetIndex(1);
+    
     if (zoomButtonBar) zoomButtonBar.show();
     
     // If there isn't a categoryNavBar yet, go ahead and create one.
@@ -194,6 +193,7 @@ exports.openCategoryLocationsMapView = function (viewModel) {
 
 exports.openSearchView = function () {
     _hideAllViews();
+    bottomNavButtons.doSetIndex(0);
     if (searchBar) searchBar.show();
     if (zoomButtonBar) zoomButtonBar.show();
     if (mapView) mapView.show();
@@ -202,11 +202,13 @@ exports.openSearchView = function () {
 exports.openFavoritesBrowsingView = function () {
     //TODO: Implement this view
     _hideAllViews();
+    bottomNavButtons.doSetIndex(2);
 };
 
 exports.openFavoritesMapView = function () {
     // TODO: Implement this view
     _hideAllViews();
+    bottomNavButtons.doSetIndex(2);
     if (zoomButtonBar) zoomButtonBar.show();
 };
 
