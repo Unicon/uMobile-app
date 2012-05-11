@@ -60,7 +60,7 @@ exports.NOTIFICATIONS_SERVICE = (Titanium.Platform.name == 'android' ? 'http://1
 //------- DIRECTORY SERVICE -------
 
 exports.DIRECTORY_SERVICE_URL = exports.BASE_PORTAL_URL + exports.PORTAL_CONTEXT + '/api/people.json';
-exports.DIRECTORY_SERVICE_SEARCH_FIELDS = ['displayName'];
+exports.DIRECTORY_SERVICE_SEARCH_FIELDS = ['given','sn','twitter'];
 exports.DIRECTORY_SERVICE_RESULT_FIELDS = {
 	fullName : 'displayName',
 	nickname : 'nickname',
@@ -98,18 +98,10 @@ exports.LOCAL_MODULES.directory = {
 	window : 'directory'
 };
 
-exports.LOCAL_MODULES.transit = {
-	title : 'Transit',
-	fname : 'transit',
-	url : 'http://uchicago.transloc.com/m/',
-	doesRequireLayout : true,
-	externalModule : true
-};
-
-exports.LOCAL_MODULES.library = {
-	title : "Library",
-	fname : "library",
-	url : 'http://mobile.lib.uchicago.edu/',
+exports.LOCAL_MODULES.twitter = {
+	title : "Twitter",
+	fname : "twitter",
+	url : 'https://mobile.twitter.com/search/realtime/%23jasigsakai12',
 	doesRequireLayout : true,
 	externalModule : true
 };
@@ -162,21 +154,11 @@ exports.nativeIcons = {
 
 exports.directoryEmergencyContacts = [
     {
-	    displayName : ["OUPD"],
-	    telephoneNumber : ['(740) 593-1911'],
-	    postalAddress : ['135 Scott Quad$Athens, Ohio 45701'],
-	    url : ['http://www.ohio.edu/police/alerts/']
-    },
-    {
-	    displayName : ["Fire"],
-	    telephoneNumber : ['911']
-    },
-    {
-	    displayName : ["Counseling"],
-	    telephoneNumber : ['(740) 593-1616'],
-	    postalAddress : ['Hudson Health Center, 3rd Floor$2 Health Center Drive$Athens, Ohio 45701'],
-	    url : ['http://www.ohio.edu/counseling/index.cfm']
+	    displayName : ["Westin Peachtree Plaza"],
+	    telephoneNumber : ['(404) 659-1400'],
+	    postalAddress : ['210 Peachtree Street$Atlanta, GA  30303'],
+	    url : ['http://www.starwoodhotels.com/westin/property/overview/index.html?propertyID=1023']
     }
 ];
 
-exports.phoneDirectoryNumber = "(740) 593-1000";
+//exports.phoneDirectoryNumber = "(740) 593-1000";

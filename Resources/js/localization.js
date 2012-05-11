@@ -97,7 +97,7 @@ exports.en_US = {
     directorySearchHintText: "John Doe, Jdoe@myschool.edu, 555 555 5555",
     phoneDirectory: "Phone Directory",
     phoneNumber: "Phone Number",
-    emergencyContacts: "Emergency Contacts",
+    emergencyContacts: "Conference Contacts",
     contactDetail: "Contact Detail",
     email: "Email",
     phone: "Phone",

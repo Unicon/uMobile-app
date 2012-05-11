@@ -10,13 +10,13 @@
         <target device="android">true</target>
         <target device="blackberry">false</target>
     </deployment-targets>
-    <id>net.unicon.showcase.mobile.app</id>
+    <id>org.jasig.conference.mobile.app</id>
     <name>Unicon</name>
     <version>1.1-RC1</version>
     <publisher>athena</publisher>
-    <url>http://www.unicon.net</url>
+    <url>http://www.jasig.org</url>
     <description>No description provided</description>
-    <copyright>2011 by athena</copyright>
+    <copyright>2012 by jasig</copyright>
     <icon>launcherIcon.png</icon>
     <persistent-wifi>false</persistent-wifi>
     <prerendered-icon>false</prerendered-icon>
