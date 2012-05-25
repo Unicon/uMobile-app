@@ -164,7 +164,7 @@ exports.directoryEmergencyContacts = [
     },
     {
     	displayName : ["Conference Registration"],
-    	telephoneNumber : ['(303) 254-6600'],
+    	telephoneNumber : ['(303) 817-0357','(303) 249-5553'],
     	mail : ['jasig-sakai@concentra-cms.com']
     }
 ];
