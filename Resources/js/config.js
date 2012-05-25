@@ -33,7 +33,7 @@ Titanium.App.Properties.setString('locale', 'en_US');
 exports.BASE_PORTAL_URL = 'https://umobile.unicon.net';
 exports.PORTAL_CONTEXT = '';
 exports.LAYOUT_URL = exports.BASE_PORTAL_URL + exports.PORTAL_CONTEXT + '/layout.json';
-exports.LAYOUT_VIEW = constants.layoutTypes['FOLDER_LAYOUT'];
+exports.LAYOUT_VIEW = constants.layoutTypes['GRID_LAYOUT'];
 
 //------- AUTHENTICATION -------
 Ti.App.Properties.setInt('SERVER_SESSION_TIMEOUT', parseInt((2 * 60 * 60 * 1000), 10));
@@ -60,7 +60,7 @@ exports.NOTIFICATIONS_SERVICE = (Titanium.Platform.name == 'android' ? 'http://1
 //------- DIRECTORY SERVICE -------
 
 exports.DIRECTORY_SERVICE_URL = exports.BASE_PORTAL_URL + exports.PORTAL_CONTEXT + '/api/people.json';
-exports.DIRECTORY_SERVICE_SEARCH_FIELDS = ['given','sn','twitter'];
+exports.DIRECTORY_SERVICE_SEARCH_FIELDS = ['givenName','sn','twitter'];
 exports.DIRECTORY_SERVICE_RESULT_FIELDS = {
 	fullName : 'displayName',
 	nickname : 'nickname',
@@ -161,6 +161,11 @@ exports.directoryEmergencyContacts = [
 	    telephoneNumber : ['(404) 659-1400'],
 	    postalAddress : ['210 Peachtree Street$Atlanta, GA  30303'],
 	    url : ['http://www.starwoodhotels.com/westin/property/overview/index.html?propertyID=1023']
+    },
+    {
+    	displayName : ["Conference Registration"],
+    	telephoneNumber : ['(303) 254-6600'],
+    	mail : ['jasig-sakai@concentra-cms.com']
     }
 ];
 
