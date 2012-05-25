@@ -23,7 +23,7 @@
 exports.en_US = {
     //Global Text
     uMobile: "uMobile",
-    homeTitle: "uMobile",
+    homeTitle: "JasigSakai12",
     search: "Search",
     go: "Go",
     back: "Back",

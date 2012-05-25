@@ -33,7 +33,7 @@ Titanium.App.Properties.setString('locale', 'en_US');
 exports.BASE_PORTAL_URL = 'https://umobile.unicon.net';
 exports.PORTAL_CONTEXT = '';
 exports.LAYOUT_URL = exports.BASE_PORTAL_URL + exports.PORTAL_CONTEXT + '/layout.json';
-exports.LAYOUT_VIEW = constants.layoutTypes['GRID_LAYOUT'];
+exports.LAYOUT_VIEW = constants.layoutTypes['FOLDER_LAYOUT'];
 
 //------- AUTHENTICATION -------
 Ti.App.Properties.setInt('SERVER_SESSION_TIMEOUT', parseInt((2 * 60 * 60 * 1000), 10));
@@ -136,11 +136,14 @@ exports.nativeIcons = {
 	courses: 'courses.png',
     dining : 'dining.png',
 	directory : 'directory.png',
+	images : 'photos.png',
     laundry : 'laundry.png',
 	library : 'library.png',
+	links : 'links.png',
 	map : 'map.png',
 	news : 'feed.png',
-	presentations : 'opencast.png',
+	opencast : 'opencast.png',
+	presentations : 'presentations.png',
 	search: 'search.png',
 	stats : 'stats.png',
 	transit : 'transit.png',
