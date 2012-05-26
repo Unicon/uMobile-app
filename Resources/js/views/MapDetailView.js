@@ -22,7 +22,7 @@ _ = require('/js/libs/underscore-min'),
 localDictionary = require('/js/localization')[Ti.App.Properties.getString('locale')],
 styles = require('/js/style');
 
-exports.detailView = Titanium.UI.createView(styles.view);
+exports.detailView = Titanium.UI.createView(styles.mapDetailView);
 
 exports.render = function (viewModel) {
     var mapImageGroup, mapGroupAddress, directionsButton, directionsButtonRow, detailImageRow, detailImage,
@@ -37,13 +37,13 @@ exports.render = function (viewModel) {
         }
     }
     
-    locationDetailTitleBar = require('/js/views/UI/SecondaryNav').createSecondaryNav();
+    /*locationDetailTitleBar = require('/js/views/UI/SecondaryNav').createSecondaryNav();
     locationDetailTitleBar.view.top = 0;
     locationDetailTitleBar.titleLabel.text = viewModel.title;
     locationDetailTitleBar.leftButton.addEventListener('click', onBackBtnClick);
     locationDetailTitleBar.rightButton.hide();
     locationDetailTitleBar.rightButton.visible = false;
-    exports.detailView.add(locationDetailTitleBar.view);
+    exports.detailView.add(locationDetailTitleBar.view);*/
     
     mapGroupAddress = Ti.UI.createTableViewSection({
         headerTitle: localDictionary.locationDetails
@@ -76,6 +76,13 @@ exports.render = function (viewModel) {
     viewOnMapButton.addEventListener('touchend', function (e) {
         viewOnMapButton.backgroundGradient = styles.contentButton.backgroundGradient;
     });
+
+    if (viewModel.description) {
+        var descriptionRow = Ti.UI.createTableViewRow({
+            title: viewModel.description
+        });
+        mapGroupAddress.add(descriptionRow);
+    }   
     
     if(viewModel.address) {
         directionsButtonOptions = _.clone(styles.contentButton);
@@ -101,6 +108,7 @@ exports.render = function (viewModel) {
     
     _tableViewData.push(mapGroupAddress);
     
+
     if (viewModel.img) {
         mapImageGroup = Ti.UI.createTableViewSection({
             headerTitle: localDictionary.locationImage
@@ -118,8 +126,8 @@ exports.render = function (viewModel) {
     mapDetailTableView = Ti.UI.createTableView(styles.mapDetailTableView);
     exports.detailView.add(mapDetailTableView);
     mapDetailTableView.setData(_tableViewData);
-    
 };
+
 exports.events = {
     VIEW_ON_MAP_CLICK   : "MapDetailViewViewOnMapClick"
 };
