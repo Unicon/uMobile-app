@@ -33,7 +33,7 @@ Titanium.App.Properties.setString('locale', 'en_US');
 exports.BASE_PORTAL_URL = 'https://dev-uportal-showcase.unicon.net';
 exports.PORTAL_CONTEXT = '/uPortal';
 exports.LAYOUT_URL = exports.BASE_PORTAL_URL + exports.PORTAL_CONTEXT + '/layout.json';
-exports.LAYOUT_VIEW = constants.layoutTypes['FOLDER_LAYOUT'];
+exports.LAYOUT_VIEW = constants.layoutTypes['GRID_LAYOUT'];
 
 //------- AUTHENTICATION -------
 Ti.App.Properties.setInt('SERVER_SESSION_TIMEOUT', parseInt((2 * 60 * 60 * 1000), 10));
@@ -90,7 +90,7 @@ exports.DIRECTORY_SERVICE_RESULT_FIELDS = {
 	fullName : 'displayName',
 	nickname : 'nickname',
 	URL : 'url',
-	homeAddress : 'postalAddress',
+//	homeAddress : 'postalAddress',
 	homeEmail : 'mail',
 	homePhone : 'telephoneNumber',
 	firstName : 'givenName',
@@ -175,6 +175,7 @@ exports.nativeIcons = {
 	directory : 'directory.png',
     laundry : 'laundry.png',
 	library : 'library.png',
+	"unicon-employee-links" : 'links.png',
 	map : 'map.png',
 	news : 'feed.png',
 	presentations : 'opencast.png',
